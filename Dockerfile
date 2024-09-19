@@ -8,12 +8,11 @@ WORKDIR /app
 COPY package.json ./
 RUN npm install
 
-# Copy source code and build
-COPY . .
-RUN npm run build
+# Copy source code
+COPY src/ ./src
 
 # Expose application port (optional)
 EXPOSE 3000
 
 # Start the application
-CMD ["npm", "start"]
+CMD ["node", "src/index.js"]
