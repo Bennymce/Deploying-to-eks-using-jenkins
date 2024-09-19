@@ -1,0 +1,15 @@
+{
+  "name": "deploying-to-eks-using-jenkins",
+  "version": "1.0.0",
+  "description": "Deploying an EKS app from Jenkins pipeline  DEPLOY AN APP TO EKS EKS CLUSTER FROM JENKINS PIPELINE",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}
