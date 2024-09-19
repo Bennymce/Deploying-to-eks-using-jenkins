@@ -37,6 +37,10 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
+                    // Ensure Docker plugin is available
+                    if (!docker.isAvailable()) {
+                        error "Docker plugin is not installed or configured correctly."
+                    }
                     dockerImage = docker.build("${DOCKER_IMAGE}")
                 }
             }
@@ -44,21 +48,26 @@ pipeline {
 
         stage('Scan Image for Vulnerabilities') {
             steps {
-                sh '''
-                    # Install Trivy if not already installed
-                    which trivy || curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
-                    # Scan Docker image
-                    trivy image ${DOCKER_IMAGE} || exit 1
-                '''
+                script {
+                    // Ensure Trivy is installed
+                    sh 'which trivy || curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh'
+                    // Scan Docker image
+                    def scanResult = sh(script: "trivy image ${DOCKER_IMAGE}", returnStatus: true)
+                    if (scanResult != 0) {
+                        error "Trivy scan failed."
+                    }
+                }
             }
         }
 
         stage('Login to ECR') {
             steps {
-                script {
-                    sh '''
-                        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-                    '''
+                withCredentials([usernamePassword(credentialsId: 'aws-ecr-credentials', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                    script {
+                        sh '''
+                            aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+                        '''
+                    }
                 }
             }
         }
@@ -66,6 +75,10 @@ pipeline {
         stage('Push Docker Image to ECR') {
             steps {
                 script {
+                    // Ensure Docker plugin is available
+                    if (!docker.isAvailable()) {
+                        error "Docker plugin is not installed or configured correctly."
+                    }
                     dockerImage.push("${IMAGE_TAG}")
                 }
             }
