@@ -22,17 +22,17 @@ pipeline {
             }
         }
 
-        // stage('Build Application') {
-        //     steps {
-        //         sh 'npm run build'
-        //     }
-        // }
+        stage('Build Application') {
+            steps {
+                sh 'npm run build'
+            }
+        }
 
-        // stage('Run Tests') {
-        //     steps {
-        //         sh 'npm test'
-        //     }
-        // }
+        stage('Run Tests') {
+            steps {
+                sh 'npm test'
+            }
+        }
     }
 }
 //         stage('Build Docker Image') {
