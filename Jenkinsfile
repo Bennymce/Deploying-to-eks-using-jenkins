@@ -4,7 +4,7 @@ pipeline {
     environment {
         AWS_ACCOUNT_ID = '010438494949'
         AWS_REGION = 'us-east-2'
-        ECR_REPO_NAME = 'new-app'
+        ECR_REPO_NAME = 'jenkins-repo'
         IMAGE_TAG = "${env.BUILD_ID}"
         DOCKER_IMAGE = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}:${IMAGE_TAG}"
     }
