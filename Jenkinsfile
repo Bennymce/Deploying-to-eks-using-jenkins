@@ -20,46 +20,46 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    docker.build("${IMAGE_TAG}", ".")
-                }
-            }
-        }
+//         stage('Build Docker Image') {
+//             steps {
+//                 script {
+//                     docker.build("${IMAGE_TAG}", ".")
+//                 }
+//             }
+//         }
 
-        stage('Scan Docker Image') {
-            steps {
-                script {
-                    // Use a tool like Trivy for scanning, assuming it is installed
-                    sh 'trivy image ${IMAGE_TAG}'
-                }
-            }
-        }
+//         stage('Scan Docker Image') {
+//             steps {
+//                 script {
+//                     // Use a tool like Trivy for scanning, assuming it is installed
+//                     sh 'trivy image ${IMAGE_TAG}'
+//                 }
+//             }
+//         }
 
-        stage('Login to AWS ECR') {
-            steps {
-                script {
-                    sh '''
-                    $(aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO)
-                    '''
-                }
-            }
-        }
+//         stage('Login to AWS ECR') {
+//             steps {
+//                 script {
+//                     sh '''
+//                     $(aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO)
+//                     '''
+//                 }
+//             }
+//         }
 
-        stage('Push to ECR') {
-            steps {
-                script {
-                    sh 'docker tag ${IMAGE_TAG} ${ECR_REPO}:${env.BUILD_ID}'
-                    sh 'docker push ${ECR_REPO}:${env.BUILD_ID}'
-                }
-            }
-        }
-    }
+//         stage('Push to ECR') {
+//             steps {
+//                 script {
+//                     sh 'docker tag ${IMAGE_TAG} ${ECR_REPO}:${env.BUILD_ID}'
+//                     sh 'docker push ${ECR_REPO}:${env.BUILD_ID}'
+//                 }
+//             }
+//         }
+//     }
 
-    post {
-        always {
-            cleanWs()
-        }
-    }
-}
+//     post {
+//         always {
+//             cleanWs()
+//         }
+//     }
+// }
