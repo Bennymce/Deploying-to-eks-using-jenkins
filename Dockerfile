@@ -1,18 +1,4 @@
-# Use Node.js as base image
-FROM node:16
-
-# Set working directory
+FROM openjdk:11-jre-slim
 WORKDIR /app
-
-# Copy package.json and install dependencies
-COPY package.json ./
-RUN npm install
-
-# Copy source code
-COPY src/ ./src
-
-# Expose application port (optional)
-EXPOSE 3000
-
-# Start the application
-CMD ["node", "src/index.js"]
+COPY target/app.jar app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]
