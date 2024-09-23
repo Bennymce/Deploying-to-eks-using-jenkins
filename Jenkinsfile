@@ -10,8 +10,10 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git url: 'https://github.com/Bennymce/Deploying-to-eks-using-jenkins.git', credentialsId: 'github-credentials'
-            }
+                git url: 'https://github.com/Bennymce/Deploying-to-eks-using-jenkins.git', 
+                    branch: 'main', // Change 'main' to your branch if different
+                    credentialsId: 'github-credentials'
+            }   
         }
 
     //     stage('Build with Maven') {
