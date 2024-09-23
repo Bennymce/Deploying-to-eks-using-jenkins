@@ -22,14 +22,14 @@ pipeline {
             }
         }
 
-    //     stage('Build Docker Image') {
-    //         steps {
-    //             script {
-    //                 // Build the Docker image
-    //                 docker.build("${IMAGE_TAG}", ".")
-    //             }
-    //         }
-    //     }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Build the Docker image
+                    docker.build("${IMAGE_TAG}", ".")
+                }
+            }
+        }
 
     //     stage('Scan Docker Image') {
     //         steps {
