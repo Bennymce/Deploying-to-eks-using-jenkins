@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    tools {
+        maven 'Maven 3.8.7' // Replace with your Maven version
+    }    
 
     environment {
         AWS_REGION = 'us-east-2' // Update the region as needed
