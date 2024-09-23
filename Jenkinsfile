@@ -1,7 +1,7 @@
 pipeline {
     agent any
     tools {
-        maven 'Maven 3.8.7' // Replace with your Maven version
+        maven 'app-maven 3.8.7' // Replace with your Maven version
     }    
 
     environment {
@@ -29,7 +29,8 @@ pipeline {
             steps {
                 script {
                     // Build the Docker image
-                    docker.build("${IMAGE_TAG}", ".")
+                    def app = docker.build("myapp:${env.BUILD_ID}")
+                    //docker.build("${IMAGE_TAG}", ".")
                 }
             }
         }
