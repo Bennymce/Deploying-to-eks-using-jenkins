@@ -1,7 +1,7 @@
 pipeline {
     agent any
     tools {
-        maven 'app-maven 3.8.7' // Replace with your Maven version
+        maven 'app-maven' // Replace with your Maven version
     }    
 
     environment {
