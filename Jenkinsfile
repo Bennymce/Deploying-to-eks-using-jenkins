@@ -29,8 +29,9 @@ pipeline {
             steps {
                 script {
                     // Build the Docker image
-                    sh 'docker build -t "$JD_IMAGE" .'
-                    //docker.build("${IMAGE_TAG}", ".")
+                    //sh 'docker build -t "$JD_IMAGE" .'
+                    echo "Building Docker image with tag: ${IMAGE_TAG}"
+                    docker.build("${IMAGE_TAG}", ".")
                 }
             }
         }
