@@ -25,6 +25,22 @@ pipeline {
             }
         }
 
+
+
+   
+        stage('List Root Directory') {
+            steps {
+                sh 'ls -la'
+            }
+        }
+    
+
+        stage('List Target Directory') {
+            steps {
+                sh 'ls -la target'
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 script {
