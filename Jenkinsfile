@@ -29,7 +29,7 @@ pipeline {
             steps {
                 script {
                     // Build the Docker image
-                    def app = docker.build("myapp:${env.BUILD_ID}")
+                    sh 'docker build -t "$JD_IMAGE" .'
                     //docker.build("${IMAGE_TAG}", ".")
                 }
             }
