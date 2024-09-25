@@ -35,39 +35,39 @@ pipeline {
         }
     
 
-        // stage('List Target Directory') {
-        //     steps {
-        //         sh 'ls -la target'
-        //     }
-        // }
+        stage('List Target Directory') {
+            steps {
+                sh 'ls -la target'
+            }
+        }
         
-        // stage('Check Dockerfile') {
-        //     steps {
-        //         sh 'ls -la'
-        //     }
-        // }
+        stage('Check Dockerfile') {
+            steps {
+                sh 'ls -la'
+            }
+        }
 
 
 
-        // stage('Build Docker Image') {
-        //     steps {
-        //         script {
-        //             // Build the Docker image
-        //             //sh 'docker build -t "$JD_IMAGE" .'
-        //             echo "Building Docker image with tag: ${IMAGE_TAG}"
-        //             docker.build("${IMAGE_TAG}", ".")
-        //         }
-        //     }
-        // }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Build the Docker image
+                    //sh 'docker build -t "$JD_IMAGE" .'
+                    echo "Building Docker image with tag: ${IMAGE_TAG}"
+                    docker.build("${IMAGE_TAG}", ".")
+                }
+            }
+        }
 
-    //     stage('Scan Docker Image') {
-    //         steps {
-    //             script {
-    //                 // Use a tool like Trivy for scanning, assuming it is installed
-    //                 sh "trivy image ${IMAGE_TAG}"
-    //             }
-    //         }
-    //     }
+        stage('Scan Docker Image') {
+            steps {
+                script {
+                    // Use a tool like Trivy for scanning, assuming it is installed
+                    sh "trivy image ${IMAGE_TAG}"
+                }
+            }
+        }
 
     //     stage('Login to AWS ECR') {
     //         steps {
