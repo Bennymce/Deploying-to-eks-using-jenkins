@@ -25,7 +25,11 @@ pipeline {
             }
         }
 
-
+         stage('Change Target Permissions') {
+            steps {
+                sh 'chmod -R 755 target/'
+            }
+        }
 
    
         stage('List Root Directory') {
