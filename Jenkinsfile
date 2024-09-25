@@ -25,11 +25,7 @@ pipeline {
             }
         }
 
-         stage('Change Target Permissions') {
-            steps {
-                sh 'chmod -R 755 target/'
-            }
-        }
+        
 
    
         stage('List Root Directory') {
@@ -44,6 +40,14 @@ pipeline {
                 sh 'ls -la target'
             }
         }
+        
+        stage('Check Dockerfile') {
+            steps {
+                sh 'ls -la'
+            }
+        }
+
+
 
         stage('Build Docker Image') {
             steps {
