@@ -19,3 +19,14 @@ docker run -d \
   -v /home/ubuntu/Deploying-to-eks-using-jenkins/simple-java-app:/var/jenkins_home/workspace/jenkins-app \
   -v /var/jenkins_home \
   --name jenkins jenkins/jenkins:lts
+
+
+
+docker run -d \
+  --name jenkins-docker \
+  -p 8080:8080 \
+  -p 50000:50000 \
+  -v jenkins_home:/var/jenkins_home \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /home/myusername/Deploying-to-eks-using-jenkins/simple-java-app:/var/jenkins_home/workspace/jenkins-app \
+  jenkins/jenkins:lts

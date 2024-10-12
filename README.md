@@ -83,3 +83,34 @@ pipeline {
 
 
 https://github.com/Bennymce/Deploying-to-eks-using-jenkins.git
+
+
+
+aws eks update-kubeconfig --region us-east-2 --name eks-cluster-cloudform --role-arn arn:aws:iam::010438494949:role/ekscluster-role
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::010438494949:user/node-app"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+
+
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "eks.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+        }
+    ]
+}

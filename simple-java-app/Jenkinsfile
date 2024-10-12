@@ -2,6 +2,7 @@ pipeline {
     agent any
     tools {
         maven 'app-maven' // Replace with your Maven version
+        docker 'app-docker'
     }    
 
     environment {
