@@ -57,7 +57,8 @@ pipeline {
                     echo "Building Docker image with tag: ${IMAGE_TAG}"
                     // Check if the Dockerfile exists
                     sh 'if [ -f Dockerfile ]; then echo "Dockerfile exists"; else echo "Dockerfile not found"; exit 1; fi'
-                    docker.build("${IMAGE_TAG}", "simple-java-app")
+                    sh 'docker build -t my-java-app:${BUILD_ID} simple-java-app --progress=plain --no-cache'
+                    // docker.build("${IMAGE_TAG}", "simple-java-app")
                     sh 'docker images'  // List the Docker images to verify the build
                 }
             }
