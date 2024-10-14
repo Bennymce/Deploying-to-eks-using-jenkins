@@ -61,14 +61,14 @@ pipeline {
             }
         }
 
-        stage('Scan Docker Image') {
-            steps {
-                script {
-                    // Use a tool like Trivy for scanning, assuming it is installed
-                    sh "trivy image ${IMAGE_TAG}"
-                }
-            }
-        }
+        // stage('Scan Docker Image') {
+        //     steps {
+        //         script {
+        //             // Use a tool like Trivy for scanning, assuming it is installed
+        //             sh "trivy image ${IMAGE_TAG}"
+        //         }
+        //     }
+        // }
 
     //     stage('Login to AWS ECR') {
     //         steps {

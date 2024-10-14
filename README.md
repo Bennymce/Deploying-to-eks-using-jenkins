@@ -114,3 +114,7 @@ aws eks update-kubeconfig --region us-east-2 --name eks-cluster-cloudform --role
         }
     ]
 }
+
+
+
+ssh -i jenkins-server.pem ubuntu@18.188.23.85
