@@ -41,6 +41,7 @@ pipeline {
         stage('Check Docker Installation') {
             steps {
                 sh 'docker --version'
+                sh 'docker info'
             }
         }
 
@@ -56,7 +57,7 @@ pipeline {
                     echo "Building Docker image with tag: ${IMAGE_TAG}"
                     // Check if the Dockerfile exists
                     sh 'if [ -f Dockerfile ]; then echo "Dockerfile exists"; else echo "Dockerfile not found"; exit 1; fi'
-                    docker.build("${IMAGE_TAG}","simple-java-app")
+                    docker.build("${IMAGE_TAG}", "-f simple-java-app/Dockerfile simple-java-app --no-cache")
                 }
             }
         }
