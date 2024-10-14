@@ -54,12 +54,10 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    echo "Building Docker image with tag: ${IMAGE_TAG}"
-                    // Check if the Dockerfile exists
-                    sh 'if [ -f Dockerfile ]; then echo "Dockerfile exists"; else echo "Dockerfile not found"; exit 1; fi'
-                    sh 'docker build -t my-java-app:${BUILD_ID} simple-java-app --progress=plain --no-cache'
-                    // docker.build("${IMAGE_TAG}", "simple-java-app")
-                    sh 'docker images'  // List the Docker images to verify the build
+                    // Navigate to the directory where the Dockerfile is located
+                    dir('path/to/simple-java-app') {
+                        // Build the Docker image
+                        sh 'docker build -t my-java-app:test ./simple-java-app'
                 }
             }
         }
@@ -106,4 +104,6 @@ pipeline {
             cleanWs() // Clean workspace after the build
         }
     }
-}
+  }
+} 
+
