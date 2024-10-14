@@ -8,7 +8,7 @@ WORKDIR /app
 COPY target/simple-java-app-1.0-SNAPSHOT.jar app.jar
 
 # Expose the application on port 8080
-EXPOSE 8080
+EXPOSE 8081
 
 # Command to run the JAR file
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -26,77 +26,81 @@ pipeline {
             }
         }
 
-        
-
-   
         stage('List Root Directory') {
             steps {
                 sh 'ls -la'
             }
         }
-    
 
         stage('List Target Directory') {
             steps {
                 sh 'ls -la target'
             }
         }
-        
-        stage('Check Dockerfile') {
+
+        stage('Check Docker Installation') {
             steps {
-                sh 'ls -la'
+                sh 'docker --version'
             }
         }
 
-
+        stage('Check for Dockerfile') {
+            steps {
+                sh 'ls -la Dockerfile' // Specifically check for Dockerfile
+            }
+        }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build the Docker image
-                    //sh 'docker build -t "$JD_IMAGE" .'
                     echo "Building Docker image with tag: ${IMAGE_TAG}"
+                    // Check if the Dockerfile exists
+                    sh 'if [ -f Dockerfile ]; then echo "Dockerfile exists"; else echo "Dockerfile not found"; exit 1; fi'
                     docker.build("${IMAGE_TAG}", ".")
                 }
             }
         }
 
-        // stage('Scan Docker Image') {
-        //     steps {
-        //         script {
-        //             // Use a tool like Trivy for scanning, assuming it is installed
-        //             sh "trivy image ${IMAGE_TAG}"
-        //         }
-        //     }
-        // }
+        // Uncomment these stages when you're ready to scan and push the Docker image
+        /*
+        stage('Scan Docker Image') {
+            steps {
+                script {
+                    // Use a tool like Trivy for scanning, assuming it is installed
+                    sh "trivy image ${IMAGE_TAG}"
+                }
+            }
+        }
 
-    //     stage('Login to AWS ECR') {
-    //         steps {
-    //             script {
-    //                 // Use withCredentials to bind AWS credentials
-    //                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-    //                     // Login to AWS ECR
-    //                     def loginCommand = "aws ecr get-login-password --region ${AWS_REGION}"
-    //                     sh "${loginCommand} | docker login --username AWS --password-stdin ${ECR_REPO}"
-    //                 }
-    //             }
-    //         }
-    //     }
+        stage('Login to AWS ECR') {
+            steps {
+                script {
+                    // Use withCredentials to bind AWS credentials
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+                        // Login to AWS ECR
+                        def loginCommand = "aws ecr get-login-password --region ${AWS_REGION}"
+                        sh "${loginCommand} | docker login --username AWS --password-stdin ${ECR_REPO}"
+                    }
+                }
+            }
+        }
 
-    //     stage('Push to ECR') {
-    //         steps {
-    //             script {
-    //                 // Tag the image and push to ECR
-    //                 sh "docker tag ${IMAGE_TAG} ${ECR_REPO}:${env.BUILD_ID}"
-    //                 sh "docker push ${ECR_REPO}:${env.BUILD_ID}"
-    //             }
-    //         }
-    //     }
-    // }
+        stage('Push to ECR') {
+            steps {
+                script {
+                    // Tag the image and push to ECR
+                    sh "docker tag ${IMAGE_TAG} ${ECR_REPO}:${env.BUILD_ID}"
+                    sh "docker push ${ECR_REPO}:${env.BUILD_ID}"
+                }
+            }
+        }
+        */
 
-    // post {
-    //     always {
-    //         cleanWs() // Clean workspace after the build
-    //     }
+    }
+
+    post {
+        always {
+            cleanWs() // Clean workspace after the build
+        }
     }
 }
