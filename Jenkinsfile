@@ -55,7 +55,7 @@ pipeline {
             steps {
                 script {
                     // Navigate to the directory where the Dockerfile is located
-                    dir('path/to/simple-java-app') {
+                    dir('Deploying-to-eks-using-jenkins/simple-java-app') {
                         // Build the Docker image
                         sh 'docker build -t my-java-app:test ./simple-java-app'
                 }
