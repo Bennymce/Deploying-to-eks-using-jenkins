@@ -59,8 +59,6 @@ pipeline {
             }
         }
 
-        // Uncomment these stages when you're ready to scan and push the Docker image
-        // /*
         stage('Scan Docker Image') {
             steps {
                 script {
@@ -69,33 +67,32 @@ pipeline {
             }
         }
 
-    //     stage('Login to AWS ECR') {
-    //         steps {
-    //             script {
-    //                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-    //                     def loginCommand = "aws ecr get-login-password --region ${AWS_REGION}"
-    //                     sh "${loginCommand} | docker login --username AWS --password-stdin ${ECR_REPO}"
-    //                 }
-    //             }
-    //         }
-    //     }
+        /*
+        stage('Login to AWS ECR') {
+            steps {
+                script {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+                        def loginCommand = "aws ecr get-login-password --region ${AWS_REGION}"
+                        sh "${loginCommand} | docker login --username AWS --password-stdin ${ECR_REPO}"
+                    }
+                }
+            }
+        }
 
-    //     stage('Push to ECR') {
-    //         steps {
-    //             script {
-    //                 sh "docker tag ${IMAGE_TAG} ${ECR_REPO}:${env.BUILD_ID}"
-    //                 sh "docker push ${ECR_REPO}:${env.BUILD_ID}"
-    //             }
-    //         }
-    //     }
-    //     */
-    // }
+        stage('Push to ECR') {
+            steps {
+                script {
+                    sh "docker tag ${IMAGE_TAG} ${ECR_REPO}:${env.BUILD_ID}"
+                    sh "docker push ${ECR_REPO}:${env.BUILD_ID}"
+                }
+            }
+        }
+        */
+    }
 
     post {
         always {
             cleanWs() // Clean workspace after the build
         }
     }
- 
-   }
 }
