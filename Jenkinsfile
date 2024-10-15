@@ -31,7 +31,7 @@ pipeline {
             steps {
                 script {
                     // Check if the JAR file exists in the target directory
-                    sh 'ls -la Deploying-to-eks-using-jenkins/simple-java-app/target/simple-java-app-1.0-SNAPSHOT.jar'
+                    sh 'ls -la Deploying-to-eks-using-jenkins/java-app/target/myapp-1.0-SNAPSHOT.jar'
                 }
             }
         }
@@ -45,14 +45,14 @@ pipeline {
 
         stage('Check for Dockerfile') {
             steps {
-                sh 'ls -la Deploying-to-eks-using-jenkins/simple-java-app/Dockerfile'
+                sh 'ls -la Deploying-to-eks-using-jenkins/java-app/Dockerfile'
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    dir('Deploying-to-eks-using-jenkins/simple-java-app') {
+                    dir('Deploying-to-eks-using-jenkins/java-app') {
                         echo 'Starting Docker build...'
                         try {
                             // Build the Docker image
