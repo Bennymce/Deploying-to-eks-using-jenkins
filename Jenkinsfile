@@ -43,12 +43,6 @@ pipeline {
             }
         }
 
-        stage('Check for Dockerfile') {
-            steps {
-                sh 'ls -la Deploying-to-eks-using-jenkins/java-app/Dockerfile'
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 script {
