@@ -1,12 +1,12 @@
 pipeline {
     agent any
     tools {
-        maven 'app-maven' // Replace with your Maven version
+        maven 'app-maven' 
         docker 'app-docker'
     }    
 
     environment {
-        AWS_REGION = 'us-east-2' // Update the region as needed
+        AWS_REGION = 'us-east-2'
         ECR_REPO = '010438494949.dkr.ecr.us-east-2.amazonaws.com/jenkins-repo'
         IMAGE_TAG = "my-java-app:${env.BUILD_ID}"
     }
@@ -15,7 +15,7 @@ pipeline {
         stage('Clone Repository') {
             steps {
                 git url: 'https://github.com/Bennymce/Deploying-to-eks-using-jenkins.git', 
-                    branch: 'main', // Change 'main' to your branch if different
+                    branch: 'main',
                     credentialsId: 'github-credentials'
             }   
         }
@@ -26,15 +26,13 @@ pipeline {
             }
         }
 
-        // stage('List Root Directory') {
-        //     steps {
-        //         sh 'ls -la'
-        //     }
-        // }
-
-        stage('List Target Directory') {
+        // Verify JAR file exists after Maven build
+        stage('Verify JAR File') {
             steps {
-                sh 'ls -la Deploying-to-eks-using-jenkins/simple-java-app/target/'
+                script {
+                    // Check if the JAR file exists in the target directory
+                    sh 'ls -la Deploying-to-eks-using-jenkins/simple-java-app/target/simple-java-app-1.0-SNAPSHOT.jar'
+                }
             }
         }
 
@@ -54,10 +52,17 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Navigate to the directory where the Dockerfile is located
                     dir('Deploying-to-eks-using-jenkins/simple-java-app') {
-                        // Build the Docker image
-                        sh 'sudo docker build -t my-java-app:test ./simple-java-app'
+                        echo 'Starting Docker build...'
+                        try {
+                            // Build the Docker image
+                            sh 'docker build -t my-java-app:test .'
+                            echo 'Docker build completed successfully.'
+                        } catch (err) {
+                            echo 'Docker build failed.'
+                            error 'Stopping pipeline due to build failure.'
+                        }
+                    }
                 }
             }
         }
@@ -67,7 +72,6 @@ pipeline {
         stage('Scan Docker Image') {
             steps {
                 script {
-                    // Use a tool like Trivy for scanning, assuming it is installed
                     sh "trivy image ${IMAGE_TAG}"
                 }
             }
@@ -76,9 +80,7 @@ pipeline {
         stage('Login to AWS ECR') {
             steps {
                 script {
-                    // Use withCredentials to bind AWS credentials
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-                        // Login to AWS ECR
                         def loginCommand = "aws ecr get-login-password --region ${AWS_REGION}"
                         sh "${loginCommand} | docker login --username AWS --password-stdin ${ECR_REPO}"
                     }
@@ -89,14 +91,12 @@ pipeline {
         stage('Push to ECR') {
             steps {
                 script {
-                    // Tag the image and push to ECR
                     sh "docker tag ${IMAGE_TAG} ${ECR_REPO}:${env.BUILD_ID}"
                     sh "docker push ${ECR_REPO}:${env.BUILD_ID}"
                 }
             }
         }
         */
-
     }
 
     post {
@@ -104,6 +104,4 @@ pipeline {
             cleanWs() // Clean workspace after the build
         }
     }
-  }
-} 
-
+}

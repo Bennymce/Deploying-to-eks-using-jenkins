@@ -118,3 +118,4 @@ aws eks update-kubeconfig --region us-east-2 --name eks-cluster-cloudform --role
 
 
 ssh -i jenkins-server.pem ubuntu@18.188.23.85
+sh 'sudo docker build -t my-java-app:test ./simple-java-app'
