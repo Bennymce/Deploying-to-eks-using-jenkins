@@ -26,17 +26,17 @@ pipeline {
             }
         }
 
-        stage('List Root Directory') {
-            steps {
-                sh 'ls -la'
-            }
-        }
+        // stage('List Root Directory') {
+        //     steps {
+        //         sh 'ls -la'
+        //     }
+        // }
 
-        stage('List Target Directory') {
-            steps {
-                sh 'ls -la target'
-            }
-        }
+        // stage('List Target Directory') {
+        //     steps {
+        //         sh 'ls -la target'
+        //     }
+        // }
 
         stage('Check Docker Installation') {
             steps {
