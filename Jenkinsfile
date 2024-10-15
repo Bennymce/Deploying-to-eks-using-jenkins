@@ -32,11 +32,11 @@ pipeline {
         //     }
         // }
 
-        // stage('List Target Directory') {
-        //     steps {
-        //         sh 'ls -la target'
-        //     }
-        // }
+        stage('List Target Directory') {
+            steps {
+                sh 'ls -la Deploying-to-eks-using-jenkins/simple-java-app/target/'
+            }
+        }
 
         stage('Check Docker Installation') {
             steps {
@@ -47,7 +47,7 @@ pipeline {
 
         stage('Check for Dockerfile') {
             steps {
-                sh 'ls -la Dockerfile' // Specifically check for Dockerfile
+                sh 'ls -la Deploying-to-eks-using-jenkins/simple-java-app/Dockerfile'
             }
         }
 
@@ -57,7 +57,7 @@ pipeline {
                     // Navigate to the directory where the Dockerfile is located
                     dir('Deploying-to-eks-using-jenkins/simple-java-app') {
                         // Build the Docker image
-                        sh 'docker build -t my-java-app:test ./simple-java-app'
+                        sh 'sudo docker build -t my-java-app:test ./simple-java-app'
                 }
             }
         }
