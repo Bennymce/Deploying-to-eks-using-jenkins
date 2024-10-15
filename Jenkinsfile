@@ -67,7 +67,7 @@ pipeline {
             }
         }
 
-        /*
+        
         stage('Login to AWS ECR') {
             steps {
                 script {
@@ -87,7 +87,6 @@ pipeline {
                 }
             }
         }
-        */
     }
 
     post {
