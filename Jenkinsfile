@@ -31,7 +31,7 @@ pipeline {
             steps {
                 script {
                     // Check if the JAR file exists in the target directory
-                    sh 'ls -la Deploying-to-eks-using-jenkins/java-app/target/myapp-1.0-SNAPSHOT.jar'
+                    sh 'ls -la target/myapp-1.0-SNAPSHOT.jar'
                 }
             }
         }
