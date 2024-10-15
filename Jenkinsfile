@@ -46,16 +46,14 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    dir('Deploying-to-eks-using-jenkins/java-app') {
-                        echo 'Starting Docker build...'
-                        try {
-                            // Build the Docker image
-                            sh 'docker build -t my-java-app:test .'
-                            echo 'Docker build completed successfully.'
-                        } catch (err) {
-                            echo 'Docker build failed.'
-                            error 'Stopping pipeline due to build failure.'
-                        }
+                    echo 'Starting Docker build...'
+                    try {
+                        // Build the Docker image from the root folder where the Dockerfile is located
+                        sh "docker build -t ${IMAGE_TAG} ."
+                        echo 'Docker build completed successfully.'
+                    } catch (err) {
+                        echo 'Docker build failed.'
+                        error 'Stopping pipeline due to build failure.'
                     }
                 }
             }
