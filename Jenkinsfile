@@ -1,7 +1,7 @@
 pipeline {
     agent any
     tools {
-        maven 'app-maven' 
+        maven 'app-maven'
         dockerTool 'app-docker'
     }
 
@@ -72,7 +72,7 @@ pipeline {
             steps {
                 script {
                     sh "docker tag ${IMAGE_NAME} ${ECR_REPO}:${IMAGE_TAG}"
-                    sh "docker push ${IMAGE_NAME}" // Push Docker image to ECR with dynamic tag
+                    sh "docker push ${ECR_REPO}:${IMAGE_TAG}" // Push Docker image to ECR with dynamic tag
                 }
             }
         }
@@ -82,8 +82,9 @@ pipeline {
                 script {
                     echo 'Generating kubeconfig file...'
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-                    // This command generates the kubeconfig for the EKS cluster
-                    sh "aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME} --kubeconfig ${KUBECONFIG_PATH}"
+                        // This command generates the kubeconfig for the EKS cluster
+                        sh "aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME} --kubeconfig ${KUBECONFIG_PATH}"
+                    }
                 }
             }
         }
@@ -104,5 +105,4 @@ pipeline {
             cleanWs() // Clean the workspace after the build
         }
     }
- }
 }
