@@ -12,7 +12,7 @@ pipeline {
         IMAGE_TAG = "${BRANCH_NAME}-${env.BUILD_ID}"
         IMAGE_NAME = "${ECR_REPO}:${IMAGE_TAG}" // Full image name with tag
         KUBECONFIG_PATH = "${WORKSPACE}/kubeconfig" // Path to kubeconfig in your workspace
-        CLUSTER_NAME = 'your-cluster-name' // Replace with your EKS cluster name
+        CLUSTER_NAME = 'newapp-cluster' // Replace with your EKS cluster name
     }
 
     stages {
