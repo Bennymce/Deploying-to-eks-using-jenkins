@@ -11,6 +11,7 @@ pipeline {
         BRANCH_NAME = "${env.GIT_BRANCH}".replaceAll('/', '-') // Replace slashes with dashes in branch name
         IMAGE_TAG = "${BRANCH_NAME}-${env.BUILD_ID}"
         IMAGE_NAME = "${ECR_REPO}:${IMAGE_TAG}" // Full image name with tag
+        KUBECONFIG_PATH = "${WORKSPACE}/kubeconfig" // Path to kubeconfig in your workspace
         CLUSTER_NAME = 'newapp-cluster' // Replace with your EKS cluster name
     }
 
@@ -76,35 +77,33 @@ pipeline {
             }
         }
 
-        // stage('Generate kubeconfig') {
-        //     steps {
-        //         script {
-        //             echo 'Generating kubeconfig file...'
-        //             withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-        //                 // This command generates the kubeconfig for the EKS cluster
-        //                 sh "aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME} --kubeconfig=${WORKSPACE}/kubeconfig"
-        //             }
-        //         }
-        //     }
-        // }
+        stage('Load kubeconfig') {
+            steps {
+                script {
+                    echo 'Loading kubeconfig...'
+                    // This command retrieves the kubeconfig secret and saves it to a file
+                    withCredentials([file(credentialsId: 'kubeconfig-secret', variable: 'KUBECONFIG_FILE')]) {
+                        sh "cp ${KUBECONFIG_FILE} ${KUBECONFIG_PATH}"
+                    }
+                }
+            }
+        }
 
         stage('Check kubectl Configuration') {
             steps {
                 script {
-                    sh "kubectl --kubeconfig=${WORKSPACE}/kubeconfig get nodes" // Test if kubectl can access EKS
+                    sh "kubectl --kubeconfig=${KUBECONFIG_PATH} get nodes" // Test if kubectl can access EKS
                 }
             }
         }
- 
+
         stage('Deploy to EKS') {
             steps {
                 script {
                     echo 'Deploying to EKS...'
-                    withCredentials([file(credentialsId: 'kubeconfig-secret', variable: 'KUBECONFIG_FILE')]) {
-                        // Update the image in the deployment file and apply to the cluster
-                        sh "kubectl --kubeconfig=${KUBECONFIG_FILE} set image deployment/my-java-app-deployment my-java-app-container=${IMAGE_NAME}"
-                        sh "kubectl --kubeconfig=${KUBECONFIG_FILE} rollout status deployment/my-java-app-deployment"
-                    }
+                    // Update the image in the deployment file and apply to the cluster
+                    sh "kubectl --kubeconfig=${KUBECONFIG_PATH} set image deployment/my-java-app-deployment my-java-app-container=${IMAGE_NAME}"
+                    sh "kubectl --kubeconfig=${KUBECONFIG_PATH} rollout status deployment/my-java-app-deployment"
                 }
             }
         }
