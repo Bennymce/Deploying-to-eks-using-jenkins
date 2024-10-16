@@ -89,12 +89,26 @@ pipeline {
             }
         }
 
+
+
+
+       stage('Check kubectl Configuration') {
+    steps {
+        script {
+            sh "kubectl --kubeconfig=${KUBECONFIG_PATH} get nodes" // Test if kubectl can access EKS
+        }
+    }
+}
+ 
+
         stage('Deploy to EKS') {
             steps {
                 script {
-                    // Update the image in the deployment file and apply to the cluster
-                    sh "kubectl --kubeconfig=${KUBECONFIG_PATH} set image deployment/my-java-app-deployment my-java-app-container=${IMAGE_NAME}"
-                    sh "kubectl --kubeconfig=${KUBECONFIG_PATH} rollout status deployment/my-java-app-deployment"
+                    echo 'Generating kubeconfig file...'
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+                        // Update the image in the deployment file and apply to the cluster
+                        sh "kubectl --kubeconfig=${KUBECONFIG_PATH} set image deployment/my-java-app-deployment my-java-app-container=${IMAGE_NAME}"
+                        sh "kubectl --kubeconfig=${KUBECONFIG_PATH} rollout status deployment/my-java-app-deployment"
                 }
             }
         }
