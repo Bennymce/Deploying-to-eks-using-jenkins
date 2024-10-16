@@ -11,111 +11,34 @@ I already have an empty running EKS cluster
 run jenkins as a root user to have root priviledges using docker exec -u 0 -it
 containerid or name> /bin/bash
 # Deploying-to-eks-using-jenkins
-pipeline {
-    agent any
-    environment {
-        ECR_REPO = 'your-aws-account-id.dkr.ecr.your-region.amazonaws.com/your-repo-name'
-        IMAGE_TAG = 'latest'
-        AWS_REGION = 'your-region'
-    }
-    tools {
-        nodejs "NodeJS"  // Reference the Node.js installation in Jenkins
-    }
 
-    stages {
-        stage('Checkout') {
-            steps {
-                // Checkout the code from the repository
-                git 'https://your-repo-url.git'
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                // Install npm dependencies
-                sh 'npm install'
-            }
-        }
-
-        stage('Build Project') {
-            steps {
-                // Run the npm build script
-                sh 'npm run build'
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                // Build the Docker image
-                sh """
-                docker build -t $ECR_REPO:$IMAGE_TAG .
-                """
-            }
-        }
-
-        stage('Login to ECR') {
-            steps {
-                // Log in to ECR
-                sh """
-                aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
-                """
-            }
-        }
-
-        stage('Push Docker Image') {
-            steps {
-                // Push the Docker image to ECR
-                sh """
-                docker push $ECR_REPO:$IMAGE_TAG
-                """
-            }
-        }
-    }
-
-    post {
-        always {
-            // Clean up workspace
-            cleanWs()
-        }
-    }
-}
-
-
-
-https://github.com/Bennymce/Deploying-to-eks-using-jenkins.git
-
-
-
-aws eks update-kubeconfig --region us-east-2 --name eks-cluster-cloudform --role-arn arn:aws:iam::010438494949:role/ekscluster-role
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::010438494949:user/node-app"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-
-
-
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Principal": {
-                "Service": "eks.amazonaws.com"
-            },
-            "Action": "sts:AssumeRole"
-        }
-    ]
-}
 
 
 
 ssh -i jenkins-server.pem ubuntu@18.188.23.85
 sh 'sudo docker build -t my-java-app:test ./simple-java-app'
+
+
+eksctl create cluster --name newapp-cluster --region us-east-2 --nodes 2
+
+To update my kube config file 
+aws eks --region us-east-2 update-kubeconfig --name newapp-cluster
+
+
+scp /path/to/your/local/file username@jenkins-server:/var/lib/jenkins/workspace/my-job/
+cp /home/ubuntu/Deploying-to-eks-using-jenkins/kubeconfig /var/lib/jenkins/workspace/my-job/
+ls -l /var/lib/jenkins/workspace/
+
+
+
+mkdir -p /var/lib/jenkins/workspace/my-job/
+
+
+Set permissions
+Ensure that the jenkins user has permission to access and modify this directory:
+sudo chown -R jenkins:jenkins /var/lib/jenkins/workspace/my-job
+
+
+Verify the copy
+Check if the kubeconfig file is now in the my-job directory:
+ls -l /var/lib/jenkins/workspace/my-job/

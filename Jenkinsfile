@@ -11,7 +11,8 @@ pipeline {
         BRANCH_NAME = "${env.GIT_BRANCH}".replaceAll('/', '-') // Replace slashes with dashes in branch name
         IMAGE_TAG = "${BRANCH_NAME}-${env.BUILD_ID}"
         IMAGE_NAME = "${ECR_REPO}:${IMAGE_TAG}" // Full image name with tag
-        KUBECONFIG_PATH = "${WORKSPACE}/kubeconfig" // Path to kubeconfig in your root folder
+        KUBECONFIG_PATH = "${WORKSPACE}/kubeconfig" // Path to kubeconfig in your workspace
+        CLUSTER_NAME = 'your-cluster-name' // Replace with your EKS cluster name
     }
 
     stages {
@@ -72,6 +73,16 @@ pipeline {
                 script {
                     sh "docker tag ${IMAGE_NAME} ${ECR_REPO}:${IMAGE_TAG}"
                     sh "docker push ${IMAGE_NAME}" // Push Docker image to ECR with dynamic tag
+                }
+            }
+        }
+
+        stage('Generate kubeconfig') {
+            steps {
+                script {
+                    echo 'Generating kubeconfig file...'
+                    // This command generates the kubeconfig for the EKS cluster
+                    sh "aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME} --kubeconfig ${KUBECONFIG_PATH}"
                 }
             }
         }
