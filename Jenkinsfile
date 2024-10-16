@@ -81,6 +81,7 @@ pipeline {
             steps {
                 script {
                     echo 'Generating kubeconfig file...'
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
                     // This command generates the kubeconfig for the EKS cluster
                     sh "aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME} --kubeconfig ${KUBECONFIG_PATH}"
                 }
