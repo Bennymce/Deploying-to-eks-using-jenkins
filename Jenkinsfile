@@ -9,10 +9,9 @@ pipeline {
         AWS_REGION = 'us-east-2'
         ECR_REPO = '010438494949.dkr.ecr.us-east-2.amazonaws.com/jenkins-repo'
         BRANCH_NAME = "${env.GIT_BRANCH}".replaceAll('/', '-') // Replace slashes with dashes in branch name
-        IMAGE_TAG = "${BRANCH_NAME}-${env.BUILD_ID}"
+        IMAGE_TAG = "${BRANCH_NAME}-${env.BUILD_ID}" // Use branch name and build ID for image tag
         IMAGE_NAME = "${ECR_REPO}:${IMAGE_TAG}" // Full image name with tag
-        KUBECONFIG_PATH = '/var/lib/jenkins/kubeconfig/kubeconfig' // Path to kubeconfig in your workspace
-        CLUSTER_NAME = 'newapp-cluster' // Replace with your EKS cluster name
+        CLUSTER_NAME = 'java-cluster' // EKS cluster name
     }
 
     stages {
@@ -36,25 +35,18 @@ pipeline {
             }
         }
 
-        stage('Check Docker Installation') {
-            steps {
-                sh 'docker --version'
-                sh 'docker info'
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 script {
                     echo 'Building Docker image...'
-                    sh "docker build -t ${IMAGE_NAME} ." // Build the Docker image with dynamic tag
+                    sh "docker build -t ${IMAGE_NAME} ." // Build Docker image with tag
                 }
             }
         }
 
         stage('Scan Docker Image') {
             steps {
-                sh "trivy image ${IMAGE_NAME}" // Scan the Docker image
+                sh "trivy image ${IMAGE_NAME}" // Scan the Docker image for vulnerabilities
             }
         }
 
@@ -71,8 +63,7 @@ pipeline {
         stage('Push Docker Image to ECR') {
             steps {
                 script {
-                    sh "docker tag ${IMAGE_NAME} ${ECR_REPO}:${IMAGE_TAG}"
-                    sh "docker push ${ECR_REPO}:${IMAGE_TAG}" // Push Docker image to ECR with dynamic tag
+                    sh "docker push ${IMAGE_NAME}" // Push Docker image to ECR
                 }
             }
         }
@@ -80,35 +71,18 @@ pipeline {
         stage('Load kubeconfig') {
             steps {
                 script {
-                    echo 'Loading kubeconfig...'
-                    // This command retrieves the kubeconfig secret and saves it to a file
                     withCredentials([file(credentialsId: 'kubeconfig-secret', variable: 'KUBECONFIG_FILE')]) {
-                        sh 'cp $KUBECONFIG_FILE /var/lib/jenkins/kubeconfig/kubeconfig'
+                        // No need for hardcoded KUBECONFIG_PATH
+                        sh 'export KUBECONFIG=$KUBECONFIG_FILE' // Load kubeconfig from secret
                     }
                 }
             }
         }
-        stage('Check Kubeconfig') {
+
+        stage('Check Kubernetes Nodes') {
             steps {
                 script {
-                    sh 'ls -l /var/lib/jenkins/kubeconfig/kubeconfig'
-                }
-            }
-        }
-
-
-        stage('Edit aws-auth ConfigMap') {
-            steps {
-                script {
-                    sh 'kubectl --kubeconfig=/var/lib/jenkins/kubeconfig/kubeconfig edit configmap aws-auth -n kube-system'
-                }
-            }
-        }
-
-        stage('Check kubectl Configuration') {
-            steps {
-                script {
-                    sh "kubectl --kubeconfig=${KUBECONFIG_PATH} get nodes" // Test if kubectl can access EKS
+                    sh 'kubectl get nodes' // Verify access to the Kubernetes cluster using the loaded kubeconfig
                 }
             }
         }
@@ -117,9 +91,8 @@ pipeline {
             steps {
                 script {
                     echo 'Deploying to EKS...'
-                    // Update the image in the deployment file and apply to the cluster
-                    sh "kubectl --kubeconfig=${KUBECONFIG_PATH} set image deployment/my-java-app-deployment my-java-app-container=${IMAGE_NAME}"
-                    sh "kubectl --kubeconfig=${KUBECONFIG_PATH} rollout status deployment/my-java-app-deployment"
+                    sh "kubectl set image deployment/my-java-app-deployment my-java-app-container=${IMAGE_NAME}" // Update deployment
+                    sh "kubectl rollout status deployment/my-java-app-deployment" // Check rollout status
                 }
             }
         }
