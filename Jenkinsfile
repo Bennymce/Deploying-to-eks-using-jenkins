@@ -83,12 +83,28 @@ pipeline {
                     echo 'Loading kubeconfig...'
                     // This command retrieves the kubeconfig secret and saves it to a file
                     withCredentials([file(credentialsId: 'kubeconfig-secret', variable: 'KUBECONFIG_FILE')]) {
-                        sh "cp \$KUBECONFIG_FILE ${KUBECONFIG_PATH}"
+                        sh 'cp $KUBECONFIG_FILE /var/lib/jenkins/workspace/my-job/kubeconfig'
                     }
                 }
             }
         }
+        stage('Check Kubeconfig') {
+            steps {
+                script {
+                    sh 'ls -l /var/lib/jenkins/workspace/my-job/'
+                }
+            }
+        }
 
+
+        stage('Edit aws-auth ConfigMap') {
+            steps {
+                script {
+                    sh 'kubectl --kubeconfig=/var/lib/jenkins/workspace/my-job/kubeconfig edit configmap aws-auth -n kube-system'
+                }
+            }
+        }
+        
         stage('Check kubectl Configuration') {
             steps {
                 script {
