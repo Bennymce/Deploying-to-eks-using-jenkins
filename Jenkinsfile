@@ -11,7 +11,7 @@ pipeline {
         BRANCH_NAME = "${env.GIT_BRANCH}".replaceAll('/', '-') // Replace slashes with dashes in branch name
         IMAGE_TAG = "${BRANCH_NAME}-${env.BUILD_ID}"
         IMAGE_NAME = "${ECR_REPO}:${IMAGE_TAG}" // Full image name with tag
-        KUBECONFIG_PATH = '/var/lib/jenkins/workspace/my-job/kubeconfig' // Path to kubeconfig in your workspace
+        KUBECONFIG_PATH = '/var/lib/jenkins/kubeconfig/kubeconfig' // Path to kubeconfig in your workspace
         CLUSTER_NAME = 'newapp-cluster' // Replace with your EKS cluster name
     }
 
@@ -83,7 +83,7 @@ pipeline {
                     echo 'Loading kubeconfig...'
                     // This command retrieves the kubeconfig secret and saves it to a file
                     withCredentials([file(credentialsId: 'kubeconfig-secret', variable: 'KUBECONFIG_FILE')]) {
-                        sh 'cp $KUBECONFIG_FILE /var/lib/jenkins/workspace/my-job/kubeconfig'
+                        sh 'cp $KUBECONFIG_FILE /var/lib/jenkins/kubeconfig/kubeconfig'
                     }
                 }
             }
@@ -91,7 +91,7 @@ pipeline {
         stage('Check Kubeconfig') {
             steps {
                 script {
-                    sh 'ls -l /var/lib/jenkins/workspace/my-job/'
+                    sh 'ls -l /var/lib/jenkins/kubeconfig/kubeconfig'
                 }
             }
         }
@@ -100,11 +100,11 @@ pipeline {
         stage('Edit aws-auth ConfigMap') {
             steps {
                 script {
-                    sh 'kubectl --kubeconfig=/var/lib/jenkins/workspace/my-job/kubeconfig edit configmap aws-auth -n kube-system'
+                    sh 'kubectl --kubeconfig=/var/lib/jenkins/kubeconfig/kubeconfig edit configmap aws-auth -n kube-system'
                 }
             }
         }
-        
+
         stage('Check kubectl Configuration') {
             steps {
                 script {
