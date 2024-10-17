@@ -11,7 +11,7 @@ pipeline {
         BRANCH_NAME = "${env.GIT_BRANCH}".replaceAll('/', '-') // Replace slashes with dashes in branch name
         IMAGE_TAG = "${BRANCH_NAME}-${env.BUILD_ID}"
         IMAGE_NAME = "${ECR_REPO}:${IMAGE_TAG}" // Full image name with tag
-        KUBECONFIG_PATH = "${WORKSPACE}/kubeconfig" // Path to kubeconfig in your workspace
+        KUBECONFIG_PATH = '/var/lib/jenkins/workspace/my-job/kubeconfig' // Path to kubeconfig in your workspace
         CLUSTER_NAME = 'newapp-cluster' // Replace with your EKS cluster name
     }
 
@@ -83,7 +83,7 @@ pipeline {
                     echo 'Loading kubeconfig...'
                     // This command retrieves the kubeconfig secret and saves it to a file
                     withCredentials([file(credentialsId: 'kubeconfig-secret', variable: 'KUBECONFIG_FILE')]) {
-                        sh "cp ${KUBECONFIG_FILE} ${KUBECONFIG_PATH}"
+                        sh "cp \$KUBECONFIG_FILE ${KUBECONFIG_PATH}"
                     }
                 }
             }
