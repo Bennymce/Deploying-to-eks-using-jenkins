@@ -72,20 +72,15 @@ pipeline {
             steps {
                 script {
                     withCredentials([file(credentialsId: 'kubeconfig-secret', variable: 'KUBECONFIG_FILE')]) {
+                        withEnv(["KUBECONFIG=${KUBECONFIG_FILE}"]) {
                         // No need for hardcoded KUBECONFIG_PATH
-                        sh 'export KUBECONFIG=$KUBECONFIG_FILE' // Load kubeconfig from secret
+                        sh 'echo "KUBECONFIG: $KUBECONFIG"'
+                        sh 'kubectl get nodes'
                     }
                 }
             }
-        }
-
-        stage('Check Kubernetes Nodes') {
-            steps {
-                script {
-                    sh 'kubectl get nodes' // Verify access to the Kubernetes cluster using the loaded kubeconfig
-                }
-            }
-        }
+         }
+        }       
 
         stage('Deploy to EKS') {
             steps {
