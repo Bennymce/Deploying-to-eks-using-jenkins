@@ -86,8 +86,7 @@ pipeline {
             steps {
                 script {
                     echo 'Deploying to EKS...'
-                    sh "kubectl set image deployment/my-java-app-deployment my-java-app-container=${IMAGE_NAME}" // Update deployment
-                    sh "kubectl rollout status deployment/my-java-app-deployment" // Check rollout status
+                    sh 'kubectl apply -f java-app-deployment.yaml'
                 }
             }
         }
