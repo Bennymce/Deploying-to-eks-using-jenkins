@@ -51,16 +51,16 @@ pipeline {
         }
 
         stage('Login to AWS ECR') {
-           steps {
-               script {
-                   withCredentials([usernamePassword(credentialsId: 'aws-credentials', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
-                       sh '''
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'aws-credentials', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                        sh '''
                           aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO}
-                      '''
+                        '''
+                    }
+                }
             }
         }
-    }
-}
 
         stage('Tag and Push Docker Image to ECR') {
             steps {
@@ -76,7 +76,7 @@ pipeline {
                 script {
                     withKubeCredentials(kubectlCredentials: [[
                         caCertificate: '', 
-                        clusterName:  ${CLUSTER_NAME}, 
+                        clusterName: ${CLUSTER_NAME}, 
                         contextName: '', // Provide a valid context name if needed
                         credentialsId: 'kubeconfig-secret', 
                         namespace: '', // Specify the namespace if needed
