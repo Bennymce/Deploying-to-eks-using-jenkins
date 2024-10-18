@@ -11,7 +11,7 @@ pipeline {
         BRANCH_NAME = "${env.GIT_BRANCH}".replaceAll('/', '-') // Replace slashes with dashes in branch name
         IMAGE_TAG = "${BRANCH_NAME}-${env.BUILD_ID}" // Use branch name and build ID for image tag
         IMAGE_NAME = "${ECR_REPO}:${IMAGE_TAG}" // Full image name with tag
-        CLUSTER_NAME = 'java-cluster' // EKS cluster name
+        CLUSTER_NAME = 'benny-java-cluster' // EKS cluster name
     }
 
     stages {
@@ -53,40 +53,43 @@ pipeline {
         stage('Login to AWS ECR') {
             steps {
                 script {
-                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-                        sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO}"
-                    }
+                    sh 'aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin ${ECR_REPO}'
                 }
             }
         }
 
-        stage('Push Docker Image to ECR') {
+        stage('Tag and Push Docker Image to ECR') {
             steps {
                 script {
-                    sh "docker push ${IMAGE_NAME}" // Push Docker image to ECR
+                    sh "docker tag ${IMAGE_NAME} ${ECR_REPO}:${IMAGE_TAG}"
+                    sh "docker push ${ECR_REPO}:${IMAGE_TAG}"
                 }
             }
         }
 
-        stage('Load kubeconfig') {
+        stage('Kubeconfig') {
             steps {
                 script {
-                    withCredentials([file(credentialsId: 'kubeconfig-secret', variable: 'KUBECONFIG_FILE')]) {
-                        withEnv(["KUBECONFIG=${KUBECONFIG_FILE}"]) {
-                        // No need for hardcoded KUBECONFIG_PATH
-                        sh 'echo "KUBECONFIG: $KUBECONFIG"'
+                    withKubeCredentials(kubectlCredentials: [[
+                        caCertificate: '', 
+                        clusterName:  ${CLUSTER_NAME}, 
+                        contextName: '', // Provide a valid context name if needed
+                        credentialsId: 'kubeconfig-secret', 
+                        namespace: '', // Specify the namespace if needed
+                        serverUrl: 'https://100E584D809B03C2057ADE0FC1AD625E.gr7.us-east-2.eks.amazonaws.com'
+                    ]]) {
                         sh 'kubectl get nodes'
                     }
                 }
             }
-         }
-        }       
+        }
 
         stage('Deploy to EKS') {
             steps {
                 script {
                     echo 'Deploying to EKS...'
-                    sh 'kubectl apply -f java-app-deployment.yaml'
+                    sh 'kubectl apply -f java-app-deployment.yaml' 
+                    sh 'kubectl get pods --namespace=jenkins'
                 }
             }
         }
