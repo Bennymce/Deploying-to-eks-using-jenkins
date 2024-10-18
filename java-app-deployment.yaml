@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-java-app-deployment
+  labels:
+    app: my-java-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: my-java-app
+  template:
+    metadata:
+      labels:
+        app: my-java-app
+    spec:
+      containers:
+        - name: my-java-app-container
+          image: <YOUR_IMAGE_URI>
+          ports:
+            - containerPort: 8081
+          env:
+            - name: ENV_VARIABLE_NAME
+              value: "value"  # Add any environment variables your application needs
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-java-app-service
+spec:
+  type: LoadBalancer  # Change to ClusterIP if you don't want to expose it publicly
+  ports:
+    - port: 80        # Port exposed by the service
+      targetPort: 8081 # Port on the container
+  selector:
+    app: my-java-app
+---
