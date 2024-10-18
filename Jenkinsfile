@@ -75,7 +75,7 @@ pipeline {
                     withKubeCredentials(kubectlCredentials: [[
                         caCertificate: '', 
                         clusterName: ${CLUSTER_NAME}, 
-                        contextName: '', // Provide a valid context name if needed
+                        contextName: 'arn:aws:eks:us-east-2:010438494949:cluster/benny-java-cluster', // Provide a valid context name if needed
                         credentialsId: 'kubeconfig-secret', 
                         namespace: '', // Specify the namespace if needed
                         serverUrl: 'https://100E584D809B03C2057ADE0FC1AD625E.gr7.us-east-2.eks.amazonaws.com'
