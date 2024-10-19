@@ -88,35 +88,46 @@ kubectl get serviceaccount jenkins-service-account -n jenkins -o yaml
 
 
 
-apiVersion: v1
-kind: Config
-clusters:
-- cluster:
-    certificate-authority-data: certificate-authority-data: 
-    server:   https://100E584D809B03C2057ADE0FC1AD625E.gr7.us-east-2.eks.amazonaws.com
-  name: arn:aws:eks:us-east-2:010438494949:cluster/java-cluster
-contexts:
-- context:
-    cluster: arn:aws:eks:us-east-2:010438494949:cluster/benny-java-cluster
-    user: arn:aws:eks:us-east-2:010438494949:cluster/benny-java-cluster
-  name: arn:aws:eks:us-east-2:010438494949:cluster/benny-java-cluster
-current-context: arn:aws:eks:us-east-2:010438494949:cluster/benny-java-cluster
-users:
-- name: arn:aws:eks:us-east-2:010438494949:cluster/benny-java-cluster
-  user:
-    exec:
-      apiVersion: client.authentication.k8s.io/v1beta1
-      args:
-      - --region
-      - us-east-2
-      - eks
-      - get-token
-      - --cluster-name
-      - benny-java-cluster
-      - --output
-      - json
-      command: aws
-      env: null
-      interactiveMode: IfAvailable
-      provideClusterInfo: false
+
       
+
+
+      withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+    // some block
+}
+
+
+withCredentials([usernamePassword(credentialsId: 'aws-credentials', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+
+withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {     
+
+       aws eks describe-cluster --name benny-java-cluster --query "cluster.identity.oidc.issuer" --output text
+    aws iam create-policy --policy-name JenkinsEKSRolePolicy --policy-document file://eks-policy.json
+aws iam create-role --role-name JenkinsEKSRole --assume-role-policy-document file://trust-policy.json
+aws iam attach-role-policy --role-name JenkinsEKSRole --policy-arn arn:aws:iam::010438494949:policy/JenkinsEKSRolePolicy
+
+
+ stage('Kubeconfig') {
+            steps {
+                script {
+                    // Use the withKubeConfig block to load the kubeconfig secret
+                    withKubeConfig(
+                        clusterName: "${CLUSTER_NAME}",
+                        contextName: 'arn:aws:eks:us-east-2:010438494949:cluster/benny-java-cluster', // Provide a valid context name if needed
+                        credentialsId: 'kubeconfig-secret', // Reference the Jenkins secret for kubeconfig
+                        namespace: '', // Specify namespace if required, else keep it blank
+                        serverUrl: "${SERVER_URL}", // EKS API server URL
+                        restrictKubeConfigAccess: false // Allow access without restriction
+                    ) {
+                        // Run kubectl commands to interact with the cluster
+                        sh 'kubectl get nodes'
+                    }
+                }
+            }
+        }
+    }
+
+    
+
+    jenkins-role
+    jenkins-service-account
