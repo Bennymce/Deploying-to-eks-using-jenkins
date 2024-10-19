@@ -71,25 +71,18 @@ pipeline {
         }
 
        
-        stage('Kubeconfig') {
+         stage('Deploy to Kubernetes') {
             steps {
-                script {
-                    // Use the withKubeConfig block to load the kubeconfig secret
-                    withKubeConfig(
-                        clusterName: "${CLUSTER_NAME}",
-                        contextName: 'arn:aws:eks:us-east-2:010438494949:cluster/benny-java-cluster', // Provide a valid context name if needed
-                        credentialsId: 'kubeconfig-secret', // Reference the Jenkins secret for kubeconfig
-                        namespace: '', // Specify namespace if required, else keep it blank
-                        serverUrl: "${SERVER_URL}", // EKS API server URL
-                        restrictKubeConfigAccess: false // Allow access without restriction
-                    ) {
-                        // Run kubectl commands to interact with the cluster
-                        sh 'kubectl get nodes'
+                withKubeConfig([credentialsId: 'kubeconfig-secret', contextName: ' arn:aws:eks:us-east-2:010438494949:cluster/benny-java-cluster']) {
+                    script {
+                        // Apply the deployment and service YAMLs
+                        sh 'kubectl apply -f java-app-deployment.yaml'  // Ensure that deployment.yaml exists in the Jenkins workspace
                     }
                 }
             }
         }
     }
+
     //     stage('Deploy to EKS') {
     //         steps {
     //             script {
