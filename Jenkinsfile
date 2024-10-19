@@ -12,6 +12,7 @@ pipeline {
         IMAGE_TAG = "${BRANCH_NAME}-${env.BUILD_ID}" // Use branch name and build ID for image tag
         IMAGE_NAME = "${ECR_REPO}:${IMAGE_TAG}" // Full image name with tag
         CLUSTER_NAME = 'benny-java-cluster' // EKS cluster name
+        SERVER_URL = 'https://100E584D809B03C2057ADE0FC1AD625E.gr7.us-east-2.eks.amazonaws.com'
     }
 
     stages {
@@ -69,35 +70,36 @@ pipeline {
             }
         }
 
+       
         stage('Kubeconfig') {
             steps {
                 script {
-                    echo "Cluster Name: ${CLUSTER_NAME}" // Debugging
-                    echo "Server URL: https://100E584D809B03C2057ADE0FC1AD625E.gr7.us-east-2.eks.amazonaws.com" // Debugging
-                    withKubeCredentials(kubectlCredentials: [[
-                        caCertificate: '', 
-                        clusterName:  "${CLUSTER_NAME}",
+                    // Use the withKubeConfig block to load the kubeconfig secret
+                    withKubeConfig(
+                        clusterName: "${CLUSTER_NAME}",
                         contextName: 'arn:aws:eks:us-east-2:010438494949:cluster/benny-java-cluster', // Provide a valid context name if needed
-                        credentialsId: 'kubeconfig-secret', 
-                        namespace: '', // Specify the namespace if needed
-                        serverUrl: 'https://100E584D809B03C2057ADE0FC1AD625E.gr7.us-east-2.eks.amazonaws.com'
-                    ]]) {
+                        credentialsId: 'kubeconfig-secret', // Reference the Jenkins secret for kubeconfig
+                        namespace: '', // Specify namespace if required, else keep it blank
+                        serverUrl: "${SERVER_URL}", // EKS API server URL
+                        restrictKubeConfigAccess: false // Allow access without restriction
+                    ) {
+                        // Run kubectl commands to interact with the cluster
                         sh 'kubectl get nodes'
                     }
                 }
             }
         }
-
-        stage('Deploy to EKS') {
-            steps {
-                script {
-                    echo 'Deploying to EKS...'
-                    sh 'kubectl apply -f java-app-deployment.yaml' 
-                    sh 'kubectl get pods --namespace=jenkins'
-                }
-            }
-        }
     }
+    //     stage('Deploy to EKS') {
+    //         steps {
+    //             script {
+    //                 echo 'Deploying to EKS...'
+    //                 sh 'kubectl apply -f java-app-deployment.yaml' 
+    //                 sh 'kubectl get pods --namespace=jenkins'
+    //             }
+    //         }
+    //     }
+    // }
 
     post {
         always {
