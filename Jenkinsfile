@@ -73,7 +73,7 @@ pipeline {
        
          stage('Deploy to Kubernetes') {
             steps {
-                withKubeConfig([credentialsId: 'kubeconfig-secret', contextName: ' arn:aws:eks:us-east-2:010438494949:cluster/benny-java-cluster']) {
+                withKubeConfig([credentialsId: 'kubeconfig-secret', contextName: 'jenkins-context']) {
                     script {
                         // Apply the deployment and service YAMLs
                         sh 'kubectl apply -f java-app-deployment.yaml'  // Ensure that deployment.yaml exists in the Jenkins workspace
