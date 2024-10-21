@@ -11,8 +11,8 @@ pipeline {
         BRANCH_NAME = "${env.GIT_BRANCH}".replaceAll('/', '-') // Replace slashes with dashes in branch name
         IMAGE_TAG = "${BRANCH_NAME}-${env.BUILD_ID}" // Use branch name and build ID for image tag
         IMAGE_NAME = "${ECR_REPO}:${IMAGE_TAG}" // Full image name with tag
-        CLUSTER_NAME = 'benny-java-cluster' // EKS cluster name
-        SERVER_URL = 'https://100E584D809B03C2057ADE0FC1AD625E.gr7.us-east-2.eks.amazonaws.com'
+        CLUSTER_NAME = 'demo-cluster' // EKS cluster name
+        //SERVER_URL = 'https://100E584D809B03C2057ADE0FC1AD625E.gr7.us-east-2.eks.amazonaws.com'
     }
 
     stages {
