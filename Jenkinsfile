@@ -72,8 +72,11 @@ pipeline {
 
        
          stage('Deploy to Kubernetes') {
+            environment {
+                AWS_CREDENTIALS = credentials('aws-credentials')
+            }
             steps {
-                withKubeConfig([credentialsId: 'kubeconfig-secret', contextName: 'jenkins-context']) {
+                
                     script {
                         // Apply the deployment and service YAMLs
                         sh 'kubectl apply -f java-app-deployment.yaml --namespace jenkins --validate=false'  // Ensure that deployment.yaml exists in the Jenkins workspace
