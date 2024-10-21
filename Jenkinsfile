@@ -74,7 +74,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) { 
-                        sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO}"
+                        sh 'aws eks update-kubeconfig --name demo-cluster --region us-east-2'
                         // Apply the deployment and service YAMLs
                         sh 'kubectl apply -f java-app-deployment.yaml --namespace jenkins' 
                         // Ensure that deployment.yaml exists in the Jenkins workspace
