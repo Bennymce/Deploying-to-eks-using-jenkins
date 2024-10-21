@@ -70,13 +70,10 @@ pipeline {
             }
         }
 
-       
-         stage('Deploy to Kubernetes') 
-               
+        stage('Deploy to Kubernetes') { // Corrected stage definition
             steps {
-                
-                    script {
-                        withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) { 
+                script {
+                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) { 
                         sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO}"
                         // Apply the deployment and service YAMLs
                         sh 'kubectl apply -f java-app-deployment.yaml --namespace jenkins' 
@@ -87,20 +84,9 @@ pipeline {
         }
     }
 
-    //     stage('Deploy to EKS') {
-    //         steps {
-    //             script {
-    //                 echo 'Deploying to EKS...'
-    //                 sh 'kubectl apply -f java-app-deployment.yaml' 
-    //                 sh 'kubectl get pods --namespace=jenkins'
-    //             }
-    //         }
-    //     }
-    // }
-
     post {
         always {
             cleanWs() // Clean the workspace after the build
         }
     }
-
+}
