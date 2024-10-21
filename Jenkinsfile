@@ -71,15 +71,16 @@ pipeline {
         }
 
        
-         stage('Deploy to Kubernetes') {
-            environment {
-                AWS_CREDENTIALS = credentials('aws-credentials')
-            }
+         stage('Deploy to Kubernetes') 
+               
             steps {
                 
                     script {
+                        withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) { 
+                        sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO}"
                         // Apply the deployment and service YAMLs
-                        sh 'kubectl apply -f java-app-deployment.yaml --namespace jenkins --validate=false'  // Ensure that deployment.yaml exists in the Jenkins workspace
+                        sh 'kubectl apply -f java-app-deployment.yaml --namespace jenkins' 
+                        // Ensure that deployment.yaml exists in the Jenkins workspace
                     }
                 }
             }
