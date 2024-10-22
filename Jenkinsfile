@@ -1,38 +1,21 @@
 pipeline {
     agent any
-    tools {
-        maven 'app-maven'
-        dockerTool 'app-docker'
-    }
 
     environment {
         AWS_REGION = 'us-east-2'
         ECR_REPO = '010438494949.dkr.ecr.us-east-2.amazonaws.com/jenkins-repo'
-        BRANCH_NAME = "${env.GIT_BRANCH}".replaceAll('/', '-') // Replace slashes with dashes in branch name
-        IMAGE_TAG = "${BRANCH_NAME}-${env.BUILD_ID}" // Use branch name and build ID for image tag
+        IMAGE_TAG = "${env.BRANCH_NAME}-${env.BUILD_ID}" // Use branch name and build ID for image tag
         IMAGE_NAME = "${ECR_REPO}:${IMAGE_TAG}" // Full image name with tag
-        CLUSTER_NAME = 'demo-cluster' // EKS cluster name
-        //SERVER_URL = 'https://100E584D809B03C2057ADE0FC1AD625E.gr7.us-east-2.eks.amazonaws.com'
+        CLUSTER_NAME = 'deploy-cluster' // EKS cluster name
     }
 
     stages {
-        stage('Clone Repository') {
+        stage('Login to AWS ECR') {
             steps {
-                git url: 'https://github.com/Bennymce/Deploying-to-eks-using-jenkins.git', 
-                    branch: 'main',
-                    credentialsId: 'github-credentials'
-            }
-        }
-
-        stage('Build with Maven') {
-            steps {
-                sh 'mvn clean package'
-            }
-        }
-
-        stage('Verify JAR File') {
-            steps {
-                sh 'ls -la target/myapp-1.0-SNAPSHOT.jar'
+                script {
+                    // Login to ECR using IAM role
+                    sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO}"
+                }
             }
         }
 
@@ -45,36 +28,24 @@ pipeline {
             }
         }
 
-        stage('Scan Docker Image') {
-            steps {
-                sh "trivy image ${IMAGE_NAME}" // Scan the Docker image for vulnerabilities
-            }
-        }
-
-        stage('Login to AWS ECR') {
-            steps {
-                script {
-                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) { 
-                        sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO}"
-                    }
-                }
-            }
-        }
-
         stage('Tag and Push Docker Image to ECR') {
             steps {
                 script {
+                    // Tag the Docker image
                     sh "docker tag ${IMAGE_NAME} ${ECR_REPO}:${IMAGE_TAG}"
+                    // Push the Docker image to ECR
                     sh "docker push ${ECR_REPO}:${IMAGE_TAG}"
                 }
             }
         }
+    }
+
 
         stage('Deploy to Kubernetes') { // Corrected stage definition
             steps {
                 script {
-                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) { 
-                        sh 'aws eks update-kubeconfig --name demo-cluster --region us-east-2'
+                    //withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) { 
+                        sh 'aws eks update-kubeconfig --name deploy-cluster --region us-east-2'
                         // Apply the deployment and service YAMLs
                         sh 'kubectl apply -f java-app-deployment.yaml --namespace jenkins' 
                         // Ensure that deployment.yaml exists in the Jenkins workspace
@@ -82,7 +53,8 @@ pipeline {
                 }
             }
         }
-    }
+    } 
+
 
     post {
         always {
