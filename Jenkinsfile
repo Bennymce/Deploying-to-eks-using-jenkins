@@ -38,27 +38,30 @@ pipeline {
                 }
             }
         }
-    }
 
-
-        stage('Deploy to Kubernetes') { // Corrected stage definition
+        stage('Deploy to Kubernetes') { // Deploy the application to Kubernetes
             steps {
                 script {
-                    //withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) { 
-                        sh 'aws eks update-kubeconfig --name deploy-cluster --region us-east-2'
-                        // Apply the deployment and service YAMLs
-                        sh 'kubectl apply -f java-app-deployment.yaml --namespace jenkins' 
-                        // Ensure that deployment.yaml exists in the Jenkins workspace
-                    }
+                    // Uncomment the following block if you need to specify AWS credentials explicitly.
+                    // Otherwise, if using an IAM role on the instance, this can be omitted.
+                    //withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        
+                    // Update kubeconfig for the EKS cluster
+                    sh "aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION}"
+
+                    // Apply the Kubernetes deployment configuration
+                    sh 'kubectl apply -f java-app-deployment.yaml --namespace=jenkins' 
+                    
+                    // Check the status of the pods
+                    sh 'kubectl get pods --namespace=jenkins'
                 }
             }
         }
-     
-
+    }
 
     post {
         always {
             cleanWs() // Clean the workspace after the build
         }
     }
-
+}
