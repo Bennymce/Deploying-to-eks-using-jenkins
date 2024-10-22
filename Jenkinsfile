@@ -1,5 +1,9 @@
 pipeline {
     agent any
+    tools {
+        maven 'app-maven'
+        dockerTool 'app-docker'
+    }
 
     environment {
         AWS_REGION = 'us-east-2'
@@ -9,7 +13,30 @@ pipeline {
         CLUSTER_NAME = 'deploy-cluster' // EKS cluster name
     }
 
+
+
     stages {
+        stage('Clone Repository') {
+            steps {
+                git url: 'https://github.com/Bennymce/Deploying-to-eks-using-jenkins.git', 
+                    branch: 'main',
+                    credentialsId: 'github-credentials'
+            }
+        }
+
+        stage('Build with Maven') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('Verify JAR File') {
+            steps {
+                sh 'ls -la target/myapp-1.0-SNAPSHOT.jar'
+            }
+        }
+
+
         stage('Login to AWS ECR') {
             steps {
                 script {
