@@ -40,11 +40,12 @@ pipeline {
         stage('Login to AWS ECR') {
             steps {
                 script {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
                     // Login to ECR using IAM role
                     echo "Current AWS CLI configuration:"
-                    sh "aws configure list"
-                    echo "Current IAM role:"
-                    sh 'aws sts get-caller-identity' // This will show the current IAM identity being used
+                    //sh "aws configure list"
+                    //echo "Current IAM role:"
+                    //sh 'aws sts get-caller-identity' // This will show the current IAM identity being used
                     sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO}"
                 }
             }
