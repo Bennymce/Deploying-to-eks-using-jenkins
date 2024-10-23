@@ -16,7 +16,7 @@ spec:
       serviceAccountName: jenkins-service-account  # Specify the service account
       containers:
       - name: my-java-app-container
-        image: 010438494949.dkr.ecr.us-east-2.amazonaws.com/jenkins-repo:${IMAGE_TAG}
+        image: image
         ports:
         - containerPort: 8081
 ---

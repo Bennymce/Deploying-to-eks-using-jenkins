@@ -8,7 +8,7 @@ pipeline {
     environment {
         AWS_REGION = 'us-east-2'
         ECR_REPO = '010438494949.dkr.ecr.us-east-2.amazonaws.com/jenkins-repo'
-        IMAGE_TAG = "${env.BRANCH_NAME}-${env.BUILD_ID}" // Use branch name and build ID for image tag
+        IMAGE_TAG = "${env.BRANCH_NAME}-${env.BUILD_ID}" // For example, 'main-91'
         IMAGE_NAME = "${ECR_REPO}:${IMAGE_TAG}" // Full image name with tag
         CLUSTER_NAME = 'tester-cluster' // EKS cluster name
     }
@@ -19,6 +19,16 @@ pipeline {
                 git url: 'https://github.com/Bennymce/Deploying-to-eks-using-jenkins.git',
                     branch: 'main',
                     credentialsId: 'github-credentials'
+            }
+        }
+
+        stage('Get Version') {
+            steps {
+                script {
+                    // Get the latest git tag for semantic versioning
+                    def latestTag = sh(script: "git describe --tags --abbrev=0", returnStdout: true).trim()
+                    env.IMAGE_TAG = "${latestTag}-${env.BUILD_ID}" // Combine the latest tag with the build ID
+                }
             }
         }
 
@@ -37,11 +47,7 @@ pipeline {
         stage('Login to AWS ECR') {
             steps {
                 script {
-                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-                        // Login to ECR using IAM role
-                        echo "Current AWS CLI configuration:"
-                        // Optional: Display current IAM role
-                        // sh "aws sts get-caller-identity"
+                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                         sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO}"
                     }
                 }
@@ -52,7 +58,7 @@ pipeline {
             steps {
                 script {
                     echo 'Building Docker image...'
-                    sh "docker build -t ${IMAGE_NAME} ." // Build Docker image with tag
+                    sh "docker build -t ${IMAGE_NAME} ."
                 }
             }
         }
@@ -68,17 +74,17 @@ pipeline {
             }
         }
 
-        stage('Deploy to Kubernetes') { // Deploy the application to Kubernetes
+        stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                         // Update kubeconfig for the EKS cluster
                         sh "aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION}"
 
+                        // Use 'sed' or a similar tool to update the image in your deployment file
+                        sh "sed -i 's|image: .*|image: ${IMAGE_NAME}|' java-app-deployment.yaml"
+                        
                         // Apply the Kubernetes deployment configuration
-                        sh 'kubectl apply -f jenkins-service-account.yaml --namespace=jenkins'
-                        sh 'kubectl apply -f jenkins-role.yaml --namespace=jenkins'
-                        sh 'kubectl apply -f jenkins-role-binding.yaml --namespace=jenkins'
                         sh 'kubectl apply -f java-app-deployment.yaml --namespace=jenkins'
                         
                         // Check the status of the pods
