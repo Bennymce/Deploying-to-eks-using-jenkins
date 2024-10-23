@@ -10,7 +10,7 @@ pipeline {
         ECR_REPO = '010438494949.dkr.ecr.us-east-2.amazonaws.com/jenkins-repo'
         IMAGE_TAG = "${env.BRANCH_NAME}-${env.BUILD_ID}" // Use branch name and build ID for image tag
         IMAGE_NAME = "${ECR_REPO}:${IMAGE_TAG}" // Full image name with tag
-        CLUSTER_NAME = 'deploy-cluster' // EKS cluster name
+        CLUSTER_NAME = 'tester-cluster' // EKS cluster name
     }
 
     stages {
