@@ -13,12 +13,10 @@ pipeline {
         CLUSTER_NAME = 'deploy-cluster' // EKS cluster name
     }
 
-
-
     stages {
         stage('Clone Repository') {
             steps {
-                git url: 'https://github.com/Bennymce/Deploying-to-eks-using-jenkins.git', 
+                git url: 'https://github.com/Bennymce/Deploying-to-eks-using-jenkins.git',
                     branch: 'main',
                     credentialsId: 'github-credentials'
             }
@@ -36,22 +34,20 @@ pipeline {
             }
         }
 
-
         stage('Login to AWS ECR') {
             steps {
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-                    // Login to ECR using IAM role
-                    echo "Current AWS CLI configuration:"
-                    //sh "aws configure list"
-                    //echo "Current IAM role:"
-                    //sh 'aws sts get-caller-identity' // This will show the current IAM identity being used
-                    sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO}"
+                        // Login to ECR using IAM role
+                        echo "Current AWS CLI configuration:"
+                        // Optional: Display current IAM role
+                        // sh "aws sts get-caller-identity"
+                        sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO}"
+                    }
                 }
             }
-          }
-        }    
-    }
+        }
+
         stage('Build Docker Image') {
             steps {
                 script {
@@ -75,15 +71,11 @@ pipeline {
         stage('Deploy to Kubernetes') { // Deploy the application to Kubernetes
             steps {
                 script {
-                    // Uncomment the following block if you need to specify AWS credentials explicitly.
-                    // Otherwise, if using an IAM role on the instance, this can be omitted.
-                    //withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                        
                     // Update kubeconfig for the EKS cluster
                     sh "aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION}"
 
                     // Apply the Kubernetes deployment configuration
-                    sh 'kubectl apply -f java-app-deployment.yaml --namespace=jenkins' 
+                    sh 'kubectl apply -f java-app-deployment.yaml --namespace=jenkins'
                     
                     // Check the status of the pods
                     sh 'kubectl get pods --namespace=jenkins'
