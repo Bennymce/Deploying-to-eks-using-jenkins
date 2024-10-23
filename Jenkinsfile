@@ -8,7 +8,8 @@ pipeline {
     environment {
         AWS_REGION = 'us-east-2'
         ECR_REPO = '010438494949.dkr.ecr.us-east-2.amazonaws.com/jenkins-repo'
-        IMAGE_TAG = "${env.BRANCH_NAME}-${env.BUILD_ID}" // For example, 'main-91'
+        IMAGE_TAG = "${env.VERSION}-${env.BUILD_ID}" // Use the fetched version for the image tag
+        //IMAGE_TAG = "${env.BRANCH_NAME}-${env.BUILD_ID}" // For example, 'main-91'
         IMAGE_NAME = "${ECR_REPO}:${IMAGE_TAG}" // Full image name with tag
         CLUSTER_NAME = 'tester-cluster' // EKS cluster name
     }
@@ -25,11 +26,18 @@ pipeline {
         stage('Get Version') {
             steps {
                 script {
+                    def tags = sh(script: "git tag", returnStdout: true).trim()
+                    if (tags) {
+                         env.VERSION = sh(script: "git describe --tags --abbrev=0", returnStdout: true).trim()
+                    } else {
+                        echo 'No tags found. Using default version.'
+                        env.VERSION = "default-version" // Set a default version if no tags are present
                     // Get the latest git tag for semantic versioning
-                    def latestTag = sh(script: "git describe --tags --abbrev=0", returnStdout: true).trim()
-                    env.IMAGE_TAG = "${latestTag}-${env.BUILD_ID}" // Combine the latest tag with the build ID
+                    //def latestTag = sh(script: "git describe --tags --abbrev=0", returnStdout: true).trim()
+                    //env.IMAGE_TAG = "${latestTag}-${env.BUILD_ID}" // Combine the latest tag with the build ID
                 }
             }
+         }
         }
 
         stage('Build with Maven') {
