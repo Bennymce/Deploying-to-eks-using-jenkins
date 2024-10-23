@@ -84,6 +84,7 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
+                
                 script {
                     withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                         // Update kubeconfig for the EKS cluster
