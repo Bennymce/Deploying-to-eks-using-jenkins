@@ -37,7 +37,7 @@ pipeline {
         stage('Login to AWS ECR') {
             steps {
                 script {
-                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')])
                         // Login to ECR using IAM role
                         echo "Current AWS CLI configuration:"
                         // Optional: Display current IAM role
@@ -71,6 +71,7 @@ pipeline {
         stage('Deploy to Kubernetes') { // Deploy the application to Kubernetes
             steps {
                 script {
+                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')])
                     // Update kubeconfig for the EKS cluster
                     sh "aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION}"
 
