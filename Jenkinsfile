@@ -37,7 +37,7 @@ pipeline {
         stage('Login to AWS ECR') {
             steps {
                 script {
-                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')])
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
                         // Login to ECR using IAM role
                         echo "Current AWS CLI configuration:"
                         // Optional: Display current IAM role
@@ -71,15 +71,19 @@ pipeline {
         stage('Deploy to Kubernetes') { // Deploy the application to Kubernetes
             steps {
                 script {
-                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')])
-                    // Update kubeconfig for the EKS cluster
-                    sh "aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION}"
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+                        // Update kubeconfig for the EKS cluster
+                        sh "aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION}"
 
-                    // Apply the Kubernetes deployment configuration
-                    sh 'kubectl apply -f java-app-deployment.yaml --namespace=jenkins'
-                    
-                    // Check the status of the pods
-                    sh 'kubectl get pods --namespace=jenkins'
+                        // Apply the Kubernetes deployment configuration
+                        sh 'kubectl apply -f jenkins-service-account.yaml --namespace=jenkins'
+                        sh 'kubectl apply -f jenkins-role.yaml --namespace=jenkins'
+                        sh 'kubectl apply -f jenkins-role-binding.yaml --namespace=jenkins'
+                        sh 'kubectl apply -f java-app-deployment.yaml --namespace=jenkins'
+                        
+                        // Check the status of the pods
+                        sh 'kubectl get pods --namespace=jenkins'
+                    }
                 }
             }
         }
