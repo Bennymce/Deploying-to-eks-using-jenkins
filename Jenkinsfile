@@ -92,12 +92,17 @@ pipeline {
 
                         // Use 'sed' or a similar tool to update the image in your deployment file
                         sh "sed -i 's|image: .*|image: ${IMAGE_NAME}|' java-app-deployment.yaml"
-                        
+                        sh 'kubectl apply -f jenkins-service-account.yaml --namespace=jenkins'
+                        sh 'kubectl apply -f jenkins-role.yaml --namespace=jenkins'
+                        sh 'kubectl apply -f jenkins-role-binding.yaml --namespace=jenkins'
                         // Apply the Kubernetes deployment configuration
                         sh 'kubectl apply -f java-app-deployment.yaml --namespace=jenkins'
                         
                         // Check the status of the pods
                         sh 'kubectl get pods --namespace=jenkins'
+                        sh 'kubectl apply -f storage-class.yaml'
+                        sh 'kubectl apply -f pvc.yaml --namespace=jenkins'
+
                     }
                 }
             }
