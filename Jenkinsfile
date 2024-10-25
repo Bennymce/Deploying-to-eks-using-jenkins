@@ -11,7 +11,7 @@ pipeline {
         IMAGE_TAG = "${env.VERSION}-${env.BUILD_ID}" // Use the fetched version for the image tag
         //IMAGE_TAG = "${env.BRANCH_NAME}-${env.BUILD_ID}" // For example, 'main-91'
         IMAGE_NAME = "${ECR_REPO}:${IMAGE_TAG}" // Full image name with tag
-        CLUSTER_NAME = 'appllication-cluster' // EKS cluster name
+        CLUSTER_NAME = 'apllication-cluster' // EKS cluster name
     }
 
     stages {
