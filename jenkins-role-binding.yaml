@@ -2,11 +2,11 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: jenkinsserviceaccount-role-binding
-  namespace: jenkins
+  namespace: testing
 subjects:
 - kind: ServiceAccount
   name: jenkins-service-account
-  namespace: jenkins
+  namespace: testing
 roleRef:
   kind: Role
   name: jenkinsserviceaccount-role
