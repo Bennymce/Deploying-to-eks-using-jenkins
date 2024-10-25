@@ -96,13 +96,14 @@ pipeline {
                         sh 'kubectl apply -f jenkins-role.yaml'
                         sh 'kubectl apply -f jenkins-role-binding.yaml'
                         // Apply the Kubernetes deployment configuration
+                        sh 'kubectl apply -f storage-class.yaml'
+                        sh 'kubectl apply -f pvc.yaml'
+
                         sh 'kubectl apply -f java-app-deployment.yaml'
                         
                         // Check the status of the pods
                         sh 'kubectl get pods --namespace=testing'
-                        sh 'kubectl apply -f storage-class.yaml'
-                        sh 'kubectl apply -f pvc.yaml'
-
+                        
                     }
                 }
             }
