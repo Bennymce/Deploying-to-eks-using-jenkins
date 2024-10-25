@@ -11,7 +11,7 @@ pipeline {
         IMAGE_TAG = "${env.VERSION}-${env.BUILD_ID}" // Use the fetched version for the image tag
         //IMAGE_TAG = "${env.BRANCH_NAME}-${env.BUILD_ID}" // For example, 'main-91'
         IMAGE_NAME = "${ECR_REPO}:${IMAGE_TAG}" // Full image name with tag
-        CLUSTER_NAME = 'tester-cluster' // EKS cluster name
+        CLUSTER_NAME = 'application-cluster' // EKS cluster name
     }
 
     stages {
@@ -92,16 +92,16 @@ pipeline {
 
                         // Use 'sed' or a similar tool to update the image in your deployment file
                         sh "sed -i 's|image: .*|image: ${IMAGE_NAME}|' java-app-deployment.yaml"
-                        sh 'kubectl apply -f jenkins-service-account.yaml --namespace=jenkins'
-                        sh 'kubectl apply -f jenkins-role.yaml --namespace=jenkins'
-                        sh 'kubectl apply -f jenkins-role-binding.yaml --namespace=jenkins'
+                        sh 'kubectl apply -f jenkins-service-account.yaml --namespace=testing'
+                        sh 'kubectl apply -f jenkins-role.yaml --namespace=testing'
+                        sh 'kubectl apply -f jenkins-role-binding.yaml --namespace=testing'
                         // Apply the Kubernetes deployment configuration
-                        sh 'kubectl apply -f java-app-deployment.yaml --namespace=jenkins'
+                        sh 'kubectl apply -f java-app-deployment.yaml --namespace=testing'
                         
                         // Check the status of the pods
-                        sh 'kubectl get pods --namespace=jenkins'
+                        sh 'kubectl get pods --namespace=testing'
                         sh 'kubectl apply -f storage-class.yaml'
-                        sh 'kubectl apply -f pvc.yaml --namespace=jenkins'
+                        sh 'kubectl apply -f pvc.yaml --namespace=testing'
 
                     }
                 }
