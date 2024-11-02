@@ -19,7 +19,9 @@ ssh -i jenkins-server.pem ubuntu@18.188.23.85
 sh 'sudo docker build -t my-java-app:test ./simple-java-app'
 
 
-eksctl create cluster --name benny-java-cluster --region us-east-2 --nodes 2
+eksctl create cluster --name deploy-cluster --region us-east-2 --nodes 2
+aws eks update-kubeconfig --name demo-cluster --region us-east-2 --role-arn arn:aws:iam::010438494949:role/jenkins-eks-role
+
 
 To update my kube config file 
 
@@ -92,42 +94,157 @@ kubectl get serviceaccount jenkins-service-account -n jenkins -o yaml
       
 
 
-      withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-    // some block
-}
-
-
-withCredentials([usernamePassword(credentialsId: 'aws-credentials', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
-
-withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {     
-
+    
        aws eks describe-cluster --name benny-java-cluster --query "cluster.identity.oidc.issuer" --output text
     aws iam create-policy --policy-name JenkinsEKSRolePolicy --policy-document file://eks-policy.json
 aws iam create-role --role-name JenkinsEKSRole --assume-role-policy-document file://trust-policy.json
 aws iam attach-role-policy --role-name JenkinsEKSRole --policy-arn arn:aws:iam::010438494949:policy/JenkinsEKSRolePolicy
 
 
- stage('Kubeconfig') {
+ 
+
+    
+
+    jenkins-role
+    jenkins-service-account
+
+
+aws eks --region us-east-2 describe-cluster --name demo-cluster
+kubectl config delete-context jenkins-context
+cat ~/.kube/config
+cp /home/ubuntu/Deploying-to-eks-using-jenkins/kubeconfig /var/jenkins_home/kubeconfig
+sudo chown jenkins:jenkins /var/jenkins_home/kubeconfig
+sudo chmod 600 /var/jenkins_home/kubeconfig
+
+pipeline {
+    agent any
+    tools {
+        maven 'app-maven'
+        dockerTool 'app-docker'
+    }
+
+    environment {
+        AWS_REGION = 'us-east-2'
+        ECR_REPO = '010438494949.dkr.ecr.us-east-2.amazonaws.com/jenkins-repo'
+        BRANCH_NAME = "${env.GIT_BRANCH}".replaceAll('/', '-') // Replace slashes with dashes in branch name
+        IMAGE_TAG = "${BRANCH_NAME}-${env.BUILD_ID}" // Use branch name and build ID for image tag
+        IMAGE_NAME = "${ECR_REPO}:${IMAGE_TAG}" // Full image name with tag
+        CLUSTER_NAME = 'tester-cluster' // EKS cluster name
+        //SERVER_URL = 'https://100E584D809B03C2057ADE0FC1AD625E.gr7.us-east-2.eks.amazonaws.com'
+    }
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git url: 'https://github.com/Bennymce/Deploying-to-eks-using-jenkins.git', 
+                    branch: 'main',
+                    credentialsId: 'github-credentials'
+            }
+        }
+
+        stage('Build with Maven') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('Verify JAR File') {
+            steps {
+                sh 'ls -la target/myapp-1.0-SNAPSHOT.jar'
+            }
+        }
+
+        stage('Build Docker Image') {
             steps {
                 script {
-                    // Use the withKubeConfig block to load the kubeconfig secret
-                    withKubeConfig(
-                        clusterName: "${CLUSTER_NAME}",
-                        contextName: 'arn:aws:eks:us-east-2:010438494949:cluster/benny-java-cluster', // Provide a valid context name if needed
-                        credentialsId: 'kubeconfig-secret', // Reference the Jenkins secret for kubeconfig
-                        namespace: '', // Specify namespace if required, else keep it blank
-                        serverUrl: "${SERVER_URL}", // EKS API server URL
-                        restrictKubeConfigAccess: false // Allow access without restriction
-                    ) {
-                        // Run kubectl commands to interact with the cluster
-                        sh 'kubectl get nodes'
+                    echo 'Building Docker image...'
+                    sh "docker build -t ${IMAGE_NAME} ." // Build Docker image with tag
+                }
+            }
+        }
+
+        stage('Scan Docker Image') {
+            steps {
+                sh "trivy image ${IMAGE_NAME}" // Scan the Docker image for vulnerabilities
+            }
+        }
+
+        stage('Login to AWS ECR') {
+            steps {
+                script {
+                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) { 
+                        sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO}"
+                    }
+                }
+            }
+        }
+
+        stage('Tag and Push Docker Image to ECR') {
+            steps {
+                script {
+                    sh "docker tag ${IMAGE_NAME} ${ECR_REPO}:${IMAGE_TAG}"
+                    sh "docker push ${ECR_REPO}:${IMAGE_TAG}"
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') { // Corrected stage definition
+            steps {
+                script {
+                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) { 
+                        sh 'aws eks update-kubeconfig --name tester-cluster --region us-east-2'
+                        // Apply the deployment and service YAMLs
+                        sh 'kubectl apply -f java-app-deployment.yaml --namespace jenkins' 
+                        // Ensure that deployment.yaml exists in the Jenkins workspace
                     }
                 }
             }
         }
     }
 
-    
+    post {
+        always {
+            cleanWs() // Clean the workspace after the build
+        }
+    }
+}
 
-    jenkins-role
-    jenkins-service-account
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "eks:DescribeCluster",
+                "eks:ListClusters"
+            ],
+            "Resource": "arn:aws:eks:us-east-2:010438494949:cluster/deploy-cluster"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "sts:AssumeRole",
+            "Resource": "*"
+        }
+    ]
+}
+
+
+vi ~/.aws/credentials
+curl -s http://169.254.169.254/latest/meta-data/iam/info | jq '.arn:aws:sts::010438494949:assumed-role/demotry-role/i-042a1a2bee1fb2a6e'
+eksctl create cluster --name apllication-cluster --region us-east-2 --nodes 2
+
+Create a Tag: If your repository doesn’t have any tags, you can create one. For example:
+git tag
+This command creates a tag named v1.0.0 and pushes it to the remote repository.
+git tag v1.0.0
+git push origin v1.0.0
+
+
+It looks like the AWS EBS CSI driver is available as an EKS-managed add-on, which simplifies the installation and management process. Since you've checked the available add-on versions, you can proceed to install or update the EBS CSI driver using the following steps:
+aws eks create-addon --cluster-name  apllication-cluster--addon-name aws-ebs-csi-driver --addon-version v1.36.0-eksbuild.1
+aws eks describe-addon --cluster-name apllication-cluster --addon-name aws-ebs-csi-driver
+kubectl get pods -n kube-system -l app.kubernetes.io/name=aws-ebs-csi-driver
+kubectl get events -n testing
+
+
