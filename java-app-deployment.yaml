@@ -28,13 +28,15 @@ spec:
             path: /healthz
             port: 8081
           initialDelaySeconds: 30
+          timeoutSeconds: 10
           periodSeconds: 10
           failureThreshold: 3
         readinessProbe:
           httpGet:
             path: /ready
             port: 8081
-          initialDelaySeconds: 5
+          initialDelaySeconds: 30
+          timeoutSeconds: 10
           periodSeconds: 5
           failureThreshold: 3
       volumes:
